@@ -59,12 +59,11 @@ Best practice demonstrated in the reference article: run the agent, honestly rec
 ## Decisions made so far
 
 | Decision | Choice | Why |
-|`---`|---|---|
+|----------|--------|-----|
 | Model provider | **Groq** (free tier) | No cost to experiment while learning |
 | Groq model size | A larger, tool-calling-capable model (e.g. Llama 3.3 70B class), not a small/fast one | Smaller models are more likely to return malformed structured output |
 | Package manager | **uv** | Fast, handles the virtual environment automatically, matches the reference article |
 | Repo approach | Built from scratch | Learning > having a working copy on day one |
-
 ---
 
 ## Build order (why this order, not "build the graph first")
@@ -86,7 +85,7 @@ Building in an order where each piece is independently testable *before* wiring 
 
 - [x] Decided on Groq + uv
 - [x] Understood LangGraph core concepts (state, nodes, edges, conditional edges, tool calling)
-- [ ] Step 1: Environment setup + smoke test *(in progress)*
+- [x] Step 1: Environment setup + smoke test *(in progress)*
 - [ ] Step 2: `Profile` schema + CV extraction
 - [ ] Step 3: `AgentState` shape
 - [ ] Step 4: Minimal dumb graph (START → node → END)
