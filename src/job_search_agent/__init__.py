@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+from pypdf import PdfReader
 
 load_dotenv()
 
@@ -25,9 +26,19 @@ def smoke_test():
     if(response and response.choices and len(response.choices) > 0):
         print("Smoke test passed! Translation:", response.choices[0].message.content)
 
+def extract_pdf():
+    reader = PdfReader('TanuCV_Aug.pdf')
+    print(len(reader.pages))
+
+    text = reader.pages[0].extract_text()
+    return text
+
+def extract_profile():
+    text = extract_pdf()
 
 def main() -> None:
     smoke_test()
+    extract_pdf()
     print("Hello from job-search-agent!")
 
 if __name__ == "__main__":
