@@ -1,4 +1,4 @@
-from groq import BaseModel
+from pydantic import BaseModel
 
 
 class Experience(BaseModel):
