@@ -2,26 +2,26 @@ from pydantic import BaseModel
 
 
 class Experience(BaseModel):
-    company: str | None = None
-    role: str | None = None
-    duration: float | None = None
-    description: str | None = None
-    technologies: list[str] | None = []
-    location: str | None = None
+    company: str | None
+    role: str | None
+    duration: float | None
+    description: str | None
+    technologies: list[str] | None
+    location: str | None
 
 class Project(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    technologies: list[str] | None = []
-    link: str | None = None
+    name: str | None
+    description: str | None
+    technologies: list[str] | None
+    link: str | None
 
 class Profile(BaseModel):
-    name: str | None = None
+    name: str | None
     skills: list[str]
-    years_of_experience: float | None = None
-    languages: list[str] | None = ['English']
-    location: str | None = 'India'
-    current_role: str | None = 'Software Engineer'
-    raw_summary: str | None = None
-    experience: list[Experience] | None = []
-    projects: list[Project] | None = []
+    years_of_experience: float | None
+    languages: list[str] | None
+    location: str | None
+    current_role: str | None
+    raw_summary: str | None
+    experience: list[Experience] | None
+    projects: list[Project] | None
