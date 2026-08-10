@@ -86,7 +86,7 @@ Building in an order where each piece is independently testable *before* wiring 
 - [x] Decided on Groq + uv
 - [x] Understood LangGraph core concepts (state, nodes, edges, conditional edges, tool calling)
 - [x] Step 1: Environment setup + smoke test *(in progress)*
-- [ ] Step 2: `Profile` schema + CV extraction
+- [x] Step 2: `Profile` schema + CV extraction
 - [ ] Step 3: `AgentState` shape
 - [ ] Step 4: Minimal dumb graph (START → node → END)
 - [ ] Step 5: Real tool-calling for job search
