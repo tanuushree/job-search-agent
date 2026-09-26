@@ -8,12 +8,23 @@ from job_search_agent import extract_profile, extract_pdf
 from tools.tools import search_jobs
 
 
-# def dummy(state: AgentState) -> dict:
-#     return {"search_query": "dummy string"}
+# Ordered preference, most preferred first. This is a sort, not a filter —
+# jobs from other Indian cities still come back, just ranked lower.
+LOCATION_PREFERENCE = ["mumbai", "pune", "bengaluru", "bangalore"]
+
+def _location_rank(job: dict) -> int:
+    """Lower rank = higher preference. Jobs matching no preferred city
+    keep their original relative order after the preferred ones (stable sort)."""
+    location = (job.get("location") or "").lower()
+    for rank, city in enumerate(LOCATION_PREFERENCE):
+        if city in location:
+            return rank
+    return len(LOCATION_PREFERENCE) 
 
 def search_job(state: AgentState) -> dict:
     """The real step-5 node: the model itself decides the search query
     (and calls the search_jobs tool), instead of us hardcoding it."""
+
     llm = ChatGroq(
         model="openai/gpt-oss-120b",
         api_key=os.getenv("GROQ_API_KEY"),
@@ -25,7 +36,14 @@ def search_job(state: AgentState) -> dict:
         "Here is a candidate profile:\n"
         f"{profile.model_dump_json(indent=2)}\n\n"
         "Call search_jobs with the single best search query to find job "
-        "openings that fit this candidate."
+        "openings that fit this candidate. Job search engines match "
+        "queries literally, similar to a search engine — keep the query "
+        "short and realistic, like a real job title a recruiter would post "
+        "(2-4 words, e.g. 'Full Stack Developer' or 'Backend Engineer "
+        "Node.js'). Do not string together the candidate's entire skill "
+        "list, and do not include any city or location in the query — the "
+        "search covers the whole country and location handling happens "
+        "separately."
     )
  
     response = llm_with_tools.invoke(prompt)
@@ -37,6 +55,10 @@ def search_job(state: AgentState) -> dict:
             search_query = call["args"].get("query")
             jobs_found = search_jobs.invoke(call["args"])
  
+    # Sort nationwide results so Mumbai > Pune > Bengaluru come first,
+    # without dropping jobs from anywhere else in India.
+    jobs_found = sorted(jobs_found, key=_location_rank)
+    
     return {
         "search_query": search_query,
         "jobs_found": jobs_found,
