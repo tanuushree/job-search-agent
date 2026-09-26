@@ -58,13 +58,35 @@ def search_job(state: AgentState) -> dict:
     # Sort nationwide results so Mumbai > Pune > Bengaluru come first,
     # without dropping jobs from anywhere else in India.
     jobs_found = sorted(jobs_found, key=_location_rank)
-    
+
     return {
         "search_query": search_query,
         "jobs_found": jobs_found,
         "llm_calls": state.get("llm_calls", 0) + 1,
     }
 
+def print_jobs_table(jobs: list[dict]) -> None:
+    """Print jobs_found as a plain formatted table (no extra dependencies)."""
+    if not jobs:
+        print("No jobs found.")
+        return
+ 
+    def truncate(text: str, width: int) -> str:
+        text = text or ""
+        return text if len(text) <= width else text[: width - 1] + "…"
+ 
+    title_w, company_w, location_w = 35, 25, 20
+ 
+    header = f"{'TITLE':<{title_w}} {'COMPANY':<{company_w}} {'LOCATION':<{location_w}} URL"
+    print(header)
+    print("-" * len(header))
+ 
+    for job in jobs:
+        title = truncate(job.get("title"), title_w)
+        company = truncate(job.get("company"), company_w)
+        location = truncate(job.get("location"), location_w)
+        url = job.get("url") or ""
+        print(f"{title:<{title_w}} {company:<{company_w}} {location:<{location_w}} {url}")
 
 def build_graph():
     graph = StateGraph(AgentState)
@@ -85,4 +107,4 @@ if __name__ == "__main__":
     app = build_graph()
     result = app.invoke(starting_state)
 
-    print(result)
+    print_jobs_table(result["jobs_found"])
