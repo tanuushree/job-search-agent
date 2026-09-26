@@ -24,43 +24,55 @@ def _location_rank(job: dict) -> int:
 def search_job(state: AgentState) -> dict:
     """The real step-5 node: the model itself decides the search query
     (and calls the search_jobs tool), instead of us hardcoding it."""
-
     llm = ChatGroq(
         model="openai/gpt-oss-120b",
         api_key=os.getenv("GROQ_API_KEY"),
     )
     llm_with_tools = llm.bind_tools([search_jobs])
- 
+
     profile = state["profile"]
     prompt = (
         "Here is a candidate profile:\n"
         f"{profile.model_dump_json(indent=2)}\n\n"
-        "Call search_jobs with the single best search query to find job "
-        "openings that fit this candidate. Job search engines match "
-        "queries literally, similar to a search engine — keep the query "
-        "short and realistic, like a real job title a recruiter would post "
-        "(2-4 words, e.g. 'Full Stack Developer' or 'Backend Engineer "
-        "Node.js'). Do not string together the candidate's entire skill "
-        "list, and do not include any city or location in the query — the "
-        "search covers the whole country and location handling happens "
+        "Look at the candidate's distinct areas of experience (e.g. "
+        "different domains, tech stacks, or industries across their "
+        "experience list). For each genuinely distinct area, call "
+        "search_jobs once with a short, realistic query (2-4 words, like "
+        "a real job title a recruiter would post) covering that area — up "
+        "to 3 calls total if there are that many distinct areas, but "
+        "don't invent areas that aren't actually there. Do not string "
+        "together the candidate's entire skill list into one query, and "
+        "do not include any city or location in any query — the search "
+        "covers the whole country and location handling happens "
         "separately."
     )
- 
+
     response = llm_with_tools.invoke(prompt)
- 
+
     jobs_found = []
-    search_query = None
+    search_queries = []
+    seen_urls = set()
+
     for call in response.tool_calls:
         if call["name"] == "search_jobs":
-            search_query = call["args"].get("query")
-            jobs_found = search_jobs.invoke(call["args"])
- 
+            query = call["args"].get("query")
+            search_queries.append(query)
+            results = search_jobs.invoke(call["args"])
+
+            for job in results:
+                url = job.get("url")
+                if url and url in seen_urls:
+                    continue  # dedupe jobs the different queries both surfaced
+                if url:
+                    seen_urls.add(url)
+                jobs_found.append(job)
+
     # Sort nationwide results so Mumbai > Pune > Bengaluru come first,
     # without dropping jobs from anywhere else in India.
     jobs_found = sorted(jobs_found, key=_location_rank)
 
     return {
-        "search_query": search_query,
+        "search_query": " | ".join(search_queries) if search_queries else None,
         "jobs_found": jobs_found,
         "llm_calls": state.get("llm_calls", 0) + 1,
     }
