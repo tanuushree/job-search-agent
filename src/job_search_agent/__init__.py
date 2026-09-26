@@ -55,7 +55,9 @@ def extract_profile(text: str) -> Profile:
 
     # 4. Build the messages list — same pattern as smoke_test, different content
     messages = [
-        {"role": "system", "content": "You are a skilled assistant who's job is to extract structured information from a professional CV give as input to you in form of a string."},   # tell it its job, one sentence
+        {"role": "system", "content": "You are a skilled assistant who's job is to\
+          extract structured information from a professional CV give as input to\
+          you in form of a string."},   # tell it its job, one sentence
         {"role": "user", "content": text} 
     ]
 
@@ -70,7 +72,7 @@ def extract_profile(text: str) -> Profile:
     json_str = response.choices[0].message.content
 
     # 7. Parse it into a real Profile object
-    profile = Profile.parse_raw(json_str)
+    profile = Profile.model_validate_json(json_str)
 
     # 8. Return it
     return profile
@@ -79,7 +81,7 @@ def main() -> None:
     smoke_test()
     text = extract_pdf()
     profile = extract_profile(text)
-    print(profile.model_dump_json(indent=2))
+    # print(profile.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":
