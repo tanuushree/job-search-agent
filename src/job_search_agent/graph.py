@@ -4,7 +4,7 @@ from langchain_groq import ChatGroq
 
 from langgraph.graph import StateGraph, START, END
 from job_search_agent.schema import AgentState
-from job_search_agent import extract_profile, extract_pdf
+from job_search_agent import get_or_extract_profile, get_or_extract_profile
 from tools.tools import search_jobs
 
 
@@ -99,8 +99,7 @@ def build_graph():
 if __name__ == "__main__":
     from job_search_agent.schema import Profile
 
-    text = extract_pdf()
-    profile = extract_profile(text) 
+    profile = get_or_extract_profile()
 
     starting_state = {"profile": profile}
 

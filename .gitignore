@@ -14,3 +14,4 @@ wheels/
 
 #Documents
 *.pdf
+.cache/

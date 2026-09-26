@@ -1,9 +1,11 @@
-import os
+import os, hashlib, json
+from pathlib import Path
 from dotenv import load_dotenv
 from groq import Groq
 from pypdf import PdfReader
-
 from job_search_agent.schema import Profile
+
+CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".cache" / "profiles"
 
 load_dotenv()
 
@@ -75,6 +77,27 @@ def extract_profile(text: str) -> Profile:
     profile = Profile.model_validate_json(json_str)
 
     # 8. Return it
+    return profile
+
+def get_or_extract_profile() -> Profile:
+    """Return the cached Profile if this exact CV was extracted before,
+    otherwise extract it fresh via Groq and cache the result."""
+    pdf_path = os.getenv("TEST_CV_PATH")
+
+    with open(pdf_path, "rb") as f:
+        file_hash = hashlib.sha256(f.read()).hexdigest()[:16]
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_path = CACHE_DIR / f"{file_hash}.json"
+
+    if cache_path.exists():
+        print(f"CV unchanged — using cached profile ({cache_path.name})")
+        return Profile.model_validate_json(cache_path.read_text())
+
+    print("CV changed (or first run) — extracting profile via Groq...")
+    text = extract_pdf()
+    profile = extract_profile(text)
+    cache_path.write_text(profile.model_dump_json(indent=2))
     return profile
 
 def main() -> None:
